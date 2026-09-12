@@ -5,21 +5,26 @@ on:
     types: [upstream_updated]
   workflow_dispatch: {}
   schedule:
-    - cron: '0 */6 * * *'
+    - cron: '0 */6 * * *'   # safety net in case a dispatch ever gets missed
 
 permissions:
   contents: write
-  workflows: write
 
 jobs:
   sync:
     runs-on: ubuntu-latest
     steps:
+      # Uses a PAT with the "workflow" scope instead of the default
+      # GITHUB_TOKEN — GITHUB_TOKEN is hard-blocked by GitHub from ever
+      # creating/updating files under .github/workflows/, no permission
+      # setting can unlock that. checkout wires this token in as the
+      # git remote credential, so the later push uses it too.
       - name: Checkout main (full history)
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
           ref: main
+          token: ${{ secrets.SYNC_PUSH_TOKEN }}
 
       - name: Configure git identity
         run: |
@@ -32,6 +37,12 @@ jobs:
       - name: Fetch upstream
         run: git fetch upstream main
 
+      # Real merge, not --ff-only: this fork WILL keep picking up its own
+      # commits over time (like the one that added this very file), so a
+      # strict fast-forward would fail forever after the first such commit.
+      # A normal merge still never discards a fork-only commit — it only
+      # fails (and stops here, untouched) on a genuine line-level conflict,
+      # which needs a human anyway.
       - name: Merge upstream into main
         run: git merge upstream/main --no-edit -m "Sync from upstream (nexerisltd)"
 
