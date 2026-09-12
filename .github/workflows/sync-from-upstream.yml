@@ -1,0 +1,38 @@
+name: Sync from upstream (nexerisltd)
+
+on:
+  repository_dispatch:
+    types: [upstream_updated]
+  workflow_dispatch: {}
+  schedule:
+    - cron: '0 */6 * * *'   # safety net in case a dispatch ever gets missed
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout main (full history)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: main
+
+      - name: Configure git identity
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Add upstream remote
+        run: git remote add upstream https://github.com/nexerisltd/NexSecurity-Website.git
+
+      - name: Fetch upstream
+        run: git fetch upstream main
+
+      - name: Fast-forward merge (fails loudly instead of force-overwriting if this fork has diverged)
+        run: git merge --ff-only upstream/main
+
+      - name: Push
+        run: git push origin main
