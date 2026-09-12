@@ -5,13 +5,24 @@ on:
     branches: [main]
 
 jobs:
-  notify:
+  notify-mrarxme:
     runs-on: ubuntu-latest
     steps:
-      - name: Trigger fork sync
+      - name: Trigger mrarxme sync
         run: |
           curl -X POST \
-            -H "Authorization: token ${{ secrets.FORK_SYNC_TOKEN }}" \
+            -H "Authorization: token ${{ secrets.MRARXME_SYNC_TOKEN }}" \
             -H "Accept: application/vnd.github.v3+json" \
             https://api.github.com/repos/mrarxme/NexSecurity-Website/dispatches \
+            -d '{"event_type":"upstream_updated"}'
+
+  notify-nexsecurityog:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger nexsecurityog sync
+        run: |
+          curl -X POST \
+            -H "Authorization: token ${{ secrets.NEXSECURITYOG_SYNC_TOKEN }}" \
+            -H "Accept: application/vnd.github.v3+json" \
+            https://api.github.com/repos/nexsecurityog/NexSecurity-Website/dispatches \
             -d '{"event_type":"upstream_updated"}'
