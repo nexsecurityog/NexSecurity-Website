@@ -5,10 +5,11 @@ on:
     types: [upstream_updated]
   workflow_dispatch: {}
   schedule:
-    - cron: '0 */6 * * *'   # safety net in case a dispatch ever gets missed
+    - cron: '0 */6 * * *'
 
 permissions:
   contents: write
+  workflows: write
 
 jobs:
   sync:
@@ -31,12 +32,6 @@ jobs:
       - name: Fetch upstream
         run: git fetch upstream main
 
-      # Real merge, not --ff-only: this fork WILL keep picking up its own
-      # commits over time (like the one that added this very file), so a
-      # strict fast-forward would fail forever after the first such commit.
-      # A normal merge still never discards a fork-only commit — it only
-      # fails (and stops here, untouched) on a genuine line-level conflict,
-      # which needs a human anyway.
       - name: Merge upstream into main
         run: git merge upstream/main --no-edit -m "Sync from upstream (nexerisltd)"
 
